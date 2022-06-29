@@ -36,15 +36,14 @@ jobs:
     # Run dotnet build and publish
     - name: dotnet build unit test and publish
       run: |
-        cd Application
+        cd EmployeeMicroservice
         dotnet restore
         dotnet build --configuration Release
-        dotnet test aspnet-core-dotnet-core.UnitTests/aspnet-core-dotnet-core.UnitTests.csproj
         dotnet publish -c Release -o '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/build'
 
     - name: Archive Application
       run: |
-        zip -qq -r ./buildartifacts/Application.zip ./Application/build
+        zip -qq -r ./buildartifacts/Application.zip ./EmployeeMicroservice/build
 
     - name: Upload Application to Build Artifact
       continue-on-error: false
@@ -109,30 +108,4 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/Application/build'
-
-  FunctionalTests:
-    name: Functional tests
-    runs-on: windows-latest
-    needs: deploy
-    steps:
-    - uses: actions/checkout@master
-
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }} 
-
-    - name: update web app url in Run Settings
-      shell: powershell
-      run: |
-        cd Application\aspnet-core-dotnet-core.FunctionalTests
-        [xml]$runSetting = Get-Content functionalTests.runsettings
-        $runSetting.RunSettings.TestRunParameters.ChildNodes.Item(0).value = 'https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/'
-        $runSetting.Save("$(pwd)/functionalTests.runsettings")
-
-    - name: Run tests
-      continue-on-error: false
-      run: |
-        cd Application\aspnet-core-dotnet-core.FunctionalTests
-        dotnet test aspnet-core-dotnet-core.FunctionalTests.csproj -s functionalTests.runsettings
+        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/EmployeeMicroservice/build'
